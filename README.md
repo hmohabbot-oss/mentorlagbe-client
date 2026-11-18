@@ -1,36 +1,20 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MentorLagbe — Smart Tuition & Mentorship Platform (Client)
 
-## Getting Started
+MentorLagbe is a full-stack, role-based EdTech tuition finder and mentorship booking platform built with Next.js (App Router), TypeScript, Tailwind CSS, BetterAuth, JWT, MongoDB, Stripe, and ImgBB.
 
-First, run the development server:
+## Live Site & Repositories
+- **Live URL:** `https://your-client-url.vercel.app` (Vercel-এ ডিপ্লয় করার পর আপডেট করুন)
+- **GitHub (Client):** `https://github.com/hmohabbot-oss/mentorlagbe-client`
+- **GitHub (Server):** `https://github.com/hmohabbot-oss/mentorlagbe-server`
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Key Features
+- **Role-Based Ecosystem:** Separate dashboards and privileges for **Student**, **Tutor**, and **Admin**.
+- **Server-Side Search, Filter & Pagination:** Search approved tuitions by title/subject, filter by class level & Online/Offline mode, and navigate pages via MongoDB `.skip()` / `.limit()`.
+- **BetterAuth + JWT Security:** Secure session hydration with custom Express middlewares (`verifyToken`, `verifyStudent`, `verifyTutor`, `verifyAdmin`).
+- **Stripe Pro Subscriptions:** One-time Stripe Checkout upgrade for **Pro Tutor ($15)** and **Pro Student ($10)** with Webhook & session verification.
+- **Direct ImgBB Uploads:** Upload profile avatars and tuition banners directly via the ImgBB API.
+- **Dark / Light Theme & Toast Alerts:** Smooth theme toggle and real-time `sonner` notifications.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## NPM Packages Used
+- `next`, `react`, `react-dom`, `typescript`, `tailwindcss`, `better-auth`, `lucide-react`, `sonner`
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
