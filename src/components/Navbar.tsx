@@ -23,7 +23,7 @@ export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
-
+<header className="sticky top-0 z-50 border-t-4 border-t-[#FF6B00] border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur dark:border-b-slate-800 dark:bg-[#041E42]/95"></header>
   const navLinks = [
     { label: 'Home', href: '/' },
     { label: 'Browse Tuitions', href: '/tuitions' },
