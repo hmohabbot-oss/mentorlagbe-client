@@ -45,8 +45,10 @@ export default function SignUpPage() {
         name: name.trim(),
         email: email.trim(),
         password,
-        role,
-      } as Parameters<typeof authClient.signUp.email>[0] & { role: string });
+        selectedRole: role,
+      } as Parameters<typeof authClient.signUp.email>[0] & {
+        selectedRole: string;
+      });
 
       if (error) {
         toast.error(error.message || 'Sign up failed');

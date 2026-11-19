@@ -36,6 +36,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const refreshUser = useCallback(async () => {
     try {
+      // ১. প্রথমেই স্টোর করা JWT টোকেন দিয়ে প্রোফাইল যাচাই (কুকির ওপর নির্ভর না করে)
+      const existingToken = getStoredToken();
+      if (existingToken) {
+        try {
+          const profileRes = await apiFetch<{
+            success: boolean;
+            data: UserProfile;
+          }>('/api/users/me');
+          if (profileRes?.data) {
+            setUser(profileRes.data);
+            return;
+          }
+        } catch {
+          clearStoredToken();
+        }
+      }
+
+      // ২. JWT না থাকলে বা এক্সপায়ার্ড হলে BetterAuth সেশন থেকে নতুন JWT নেওয়া
       const sessionRes = await authClient.getSession();
       if (!sessionRes?.data?.user) {
         clearStoredToken();
@@ -43,43 +61,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      // সেশন থাকলে JWT টোকেন নিশ্চিত করে ডেটাবেস থেকে সর্বশেষ প্রোফাইল (role, plan) আনা হচ্ছে
-      let token = getStoredToken();
-      if (!token) {
-        token = await fetchAndStoreJwt();
-      }
-
-      if (token) {
-        const profileRes = await apiFetch<{ success: boolean; data: UserProfile }>(
-          '/api/users/me'
-        );
+      const newToken = await fetchAndStoreJwt();
+      if (newToken) {
+        const profileRes = await apiFetch<{
+          success: boolean;
+          data: UserProfile;
+        }>('/api/users/me');
         if (profileRes?.data) {
           setUser(profileRes.data);
           return;
         }
       }
 
-      // ফলব্যাক: যদি কোনো কারণে /api/users/me না পাওয়া যায়
       const sessionUser = sessionRes.data.user as unknown as UserProfile;
       setUser(sessionUser);
     } catch (error) {
       console.error('Auth hydration error:', error);
-      // টোকেন এক্সপায়ার্ড বা ইনভ্যালিড হলে নতুন করে JWT নেওয়ার চেষ্টা
-      const newToken = await fetchAndStoreJwt();
-      if (newToken) {
-        try {
-          const retryRes = await apiFetch<{ success: boolean; data: UserProfile }>(
-            '/api/users/me'
-          );
-          setUser(retryRes.data);
-          return;
-        } catch {
-          clearStoredToken();
-          setUser(null);
-        }
-      } else {
-        setUser(null);
-      }
+      clearStoredToken();
+      setUser(null);
     } finally {
       setLoading(false);
     }
@@ -90,7 +89,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [refreshUser]);
 
   const signOut = async () => {
-    await authClient.signOut();
+    try {
+      await authClient.signOut();
+    } catch {
+      // Ignore network errors on sign out
+    }
     clearStoredToken();
     setUser(null);
   };
