@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
   FileText,
+  Bookmark,
   PlusCircle,
   BookOpen,
   Users,
@@ -72,6 +73,11 @@ export default function DashboardLayout({
       label: 'My Applications',
       href: '/dashboard/student/my-applications',
       icon: FileText,
+    },
+    {
+      label: 'Saved Tuitions',
+      href: '/dashboard/student/saved-tuitions',
+      icon: Bookmark,
     },
     { label: 'Update Profile', href: '/dashboard/profile', icon: UserCog },
   ];

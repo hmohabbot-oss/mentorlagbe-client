@@ -14,10 +14,19 @@ import {
   BadgeCheck,
   AlertCircle,
   Loader2,
+  X,
 } from 'lucide-react';
 import { API_URL, apiFetch } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { Tuition } from '@/types';
+
+const DEFAULT_FALLBACK_SLOTS = [
+  'Morning (9:00 AM - 12:00 PM)',
+  'Afternoon (3:00 PM - 5:00 PM)',
+  'Evening (6:00 PM - 8:00 PM)',
+  'Night (8:00 PM - 10:00 PM)',
+  'Flexible / Discuss with Tutor',
+];
 
 export default function TuitionDetailsPage() {
   const params = useParams<{ id: string }>();
@@ -37,8 +46,13 @@ export default function TuitionDetailsPage() {
       try {
         const res = await fetch(`${API_URL}/api/tuitions/${params.id}`);
         const json = await res.json();
-        if (json?.success) {
+        if (json?.success && json.data) {
           setTuition(json.data);
+          const slots =
+            json.data.scheduleSlots && json.data.scheduleSlots.length > 0
+              ? json.data.scheduleSlots
+              : DEFAULT_FALLBACK_SLOTS;
+          setPreferredSchedule(slots[0]);
         }
       } catch (err) {
         console.error('Failed to fetch tuition details:', err);
@@ -48,6 +62,11 @@ export default function TuitionDetailsPage() {
     }
     if (params.id) loadDetails();
   }, [params.id]);
+
+  const availableSlots =
+    tuition?.scheduleSlots && tuition.scheduleSlots.length > 0
+      ? tuition.scheduleSlots
+      : DEFAULT_FALLBACK_SLOTS;
 
   const handleApply = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,7 +89,6 @@ export default function TuitionDetailsPage() {
       toast.success('Application submitted successfully!');
       setShowModal(false);
       setStudentPhone('');
-      setPreferredSchedule('');
       setStudentNote('');
     } catch (err) {
       toast.error((err as Error).message || 'Failed to submit application');
@@ -174,6 +192,24 @@ export default function TuitionDetailsPage() {
                 </div>
               </div>
 
+              {tuition.scheduleSlots && tuition.scheduleSlots.length > 0 && (
+                <div className="mt-5">
+                  <p className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                    Available Time Slots
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {tuition.scheduleSlots.map((slot) => (
+                      <span
+                        key={slot}
+                        className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                      >
+                        {slot}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="mt-6">
                 <h2 className="text-lg font-bold text-[#041E42] dark:text-white">
                   Course &amp; Mentorship Description
@@ -271,21 +307,41 @@ export default function TuitionDetailsPage() {
         </div>
       </div>
 
-      {/* Apply Modal */}
+      {/* Apply Modal (Capture 24 Style + Schedule Slot Dropdown) */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl dark:bg-[#0B1D3A]">
-            <h2 className="text-xl font-bold text-[#041E42] dark:text-white">
-              Apply for Tuition
-            </h2>
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-              {tuition.title}
-            </p>
+            <div className="flex items-start justify-between">
+              <div>
+                <h2 className="text-xl font-bold text-[#041E42] dark:text-white">
+                  Apply for Tuition
+                </h2>
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                  Send your application details directly to {tuition.tutorName}.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowModal(false)}
+                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+              >
+                <X size={18} />
+              </button>
+            </div>
 
             <form onSubmit={handleApply} className="mt-5 space-y-4">
               <div>
+                <label className="mb-1 block text-xs font-semibold text-slate-600 dark:text-slate-300">
+                  Tuition
+                </label>
+                <div className="rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                  {tuition.title} ({tuition.subject} — {tuition.classLevel})
+                </div>
+              </div>
+
+              <div>
                 <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">
-                  Phone Number
+                  Contact Phone Number *
                 </label>
                 <input
                   type="text"
@@ -299,21 +355,25 @@ export default function TuitionDetailsPage() {
 
               <div>
                 <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">
-                  Preferred Schedule
+                  Preferred Schedule *
                 </label>
-                <input
-                  type="text"
+                <select
                   value={preferredSchedule}
                   onChange={(e) => setPreferredSchedule(e.target.value)}
-                  placeholder="e.g. Sun, Tue, Thu at 7:00 PM"
-                  className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm text-slate-900 outline-none focus:border-[#0077CC] dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+                  className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none focus:border-[#0077CC] dark:border-slate-700 dark:bg-slate-900 dark:text-white"
                   required
-                />
+                >
+                  {availableSlots.map((slot) => (
+                    <option key={slot} value={slot}>
+                      {slot}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div>
                 <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">
-                  Learning Note (Optional)
+                  Notes for the Mentor (Optional)
                 </label>
                 <textarea
                   rows={3}
@@ -338,7 +398,7 @@ export default function TuitionDetailsPage() {
                   className="inline-flex items-center gap-2 rounded-lg bg-[#FF6B00] px-5 py-2 text-sm font-semibold text-white hover:bg-[#e05e00] disabled:opacity-60"
                 >
                   {submitting && <Loader2 size={15} className="animate-spin" />}
-                  Submit Application
+                  {submitting ? 'Submitting...' : 'Submit Application'}
                 </button>
               </div>
             </form>

@@ -13,6 +13,7 @@ export interface UserProfile {
   phone?: string;
   bio?: string;
   plan: PlanType;
+  savedTuitions?: string[];
   createdAt: string;
 }
 
@@ -25,6 +26,7 @@ export interface Tuition {
   location: string;
   monthlyFee: number;
   daysPerWeek: number;
+  scheduleSlots?: string[];
   bannerImage: string;
   description: string;
   tutorName: string;

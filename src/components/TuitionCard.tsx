@@ -1,9 +1,60 @@
-import React from 'react';
-import Link from 'next/link';
-import { BookOpen, GraduationCap, Monitor, MapPin, User } from 'lucide-react';
-import { Tuition } from '@/types';
+'use client';
 
-export default function TuitionCard({ tuition }: { tuition: Tuition }) {
+import React, { useState } from 'react';
+import Link from 'next/link';
+import {
+  BookOpen,
+  GraduationCap,
+  Monitor,
+  MapPin,
+  User,
+  Bookmark,
+} from 'lucide-react';
+import { toast } from 'sonner';
+import { Tuition } from '@/types';
+import { useAuth } from '@/context/AuthContext';
+import { apiFetch } from '@/lib/api';
+
+export default function TuitionCard({
+  tuition,
+  onToggleSave,
+}: {
+  tuition: Tuition;
+  onToggleSave?: (tuitionId: string, saved: boolean) => void;
+}) {
+  const { user, refreshUser } = useAuth();
+  const [saving, setSaving] = useState(false);
+
+  const isSaved = Boolean(user?.savedTuitions?.includes(tuition._id));
+
+  const handleBookmark = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!user) {
+      toast.info('Please sign in as a Student to save tuitions');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const res = await apiFetch<{
+        success: boolean;
+        saved: boolean;
+        message: string;
+      }>(`/api/users/saved-tuitions/${tuition._id}`, { method: 'POST' });
+      toast.success(res.message);
+      await refreshUser();
+      if (onToggleSave) {
+        onToggleSave(tuition._id, res.saved);
+      }
+    } catch (err) {
+      toast.error((err as Error).message || 'Failed to update bookmark');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-md dark:border-slate-800 dark:bg-[#0B1D3A]">
       {/* Uniform Banner Image */}
@@ -13,8 +64,10 @@ export default function TuitionCard({ tuition }: { tuition: Tuition }) {
           alt={tuition.title}
           className="h-full w-full object-cover"
         />
+
+        {/* Mode Badge */}
         <span
-          className={`absolute top-3 right-3 inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold shadow-sm ${
+          className={`absolute top-3 left-3 inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold shadow-sm ${
             tuition.mode === 'Online'
               ? 'bg-[#0077CC] text-white'
               : 'bg-[#FF6B00] text-white'
@@ -27,6 +80,21 @@ export default function TuitionCard({ tuition }: { tuition: Tuition }) {
           )}
           {tuition.mode}
         </span>
+
+        {/* Bookmark Button */}
+        <button
+          type="button"
+          onClick={handleBookmark}
+          disabled={saving}
+          title={isSaved ? 'Remove Bookmark' : 'Save Tuition'}
+          className={`absolute top-3 right-3 flex h-8 w-8 items-center justify-center rounded-full shadow-sm transition ${
+            isSaved
+              ? 'bg-[#FF6B00] text-white'
+              : 'bg-white/90 text-slate-700 hover:bg-white dark:bg-slate-900/90 dark:text-slate-200'
+          }`}
+        >
+          <Bookmark size={15} fill={isSaved ? 'currentColor' : 'none'} />
+        </button>
       </div>
 
       {/* Card Content */}

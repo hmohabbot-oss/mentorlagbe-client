@@ -3,10 +3,19 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { UploadCloud, Loader2, Send } from 'lucide-react';
+import { UploadCloud, Loader2, Send, Plus, X } from 'lucide-react';
 import { apiFetch } from '@/lib/api';
 import { uploadToImgBB } from '@/lib/imgbb';
 import { useAuth } from '@/context/AuthContext';
+
+const PRESET_SLOTS = [
+  'Morning (9:00 AM - 12:00 PM)',
+  'Afternoon (3:00 PM - 5:00 PM)',
+  'Evening (6:00 PM - 8:00 PM)',
+  'Night (8:00 PM - 10:00 PM)',
+  'Weekend Batch',
+  'Flexible / Discuss with Tutor',
+];
 
 export default function PostTuitionPage() {
   const router = useRouter();
@@ -19,11 +28,33 @@ export default function PostTuitionPage() {
   const [location, setLocation] = useState('');
   const [monthlyFee, setMonthlyFee] = useState('');
   const [daysPerWeek, setDaysPerWeek] = useState('3');
+  const [scheduleSlots, setScheduleSlots] = useState<string[]>([
+    'Evening (6:00 PM - 8:00 PM)',
+    'Flexible / Discuss with Tutor',
+  ]);
+  const [customSlot, setCustomSlot] = useState('');
   const [bannerImage, setBannerImage] = useState('');
   const [description, setDescription] = useState('');
 
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  const toggleSlot = (slot: string) => {
+    setScheduleSlots((prev) =>
+      prev.includes(slot) ? prev.filter((s) => s !== slot) : [...prev, slot]
+    );
+  };
+
+  const addCustomSlot = () => {
+    const trimmed = customSlot.trim();
+    if (!trimmed) return;
+    if (scheduleSlots.includes(trimmed)) {
+      toast.info('This slot is already added');
+      return;
+    }
+    setScheduleSlots((prev) => [...prev, trimmed]);
+    setCustomSlot('');
+  };
 
   const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -51,6 +82,10 @@ export default function PostTuitionPage() {
       toast.error('Monthly fee and days/week must be positive numbers');
       return;
     }
+    if (scheduleSlots.length === 0) {
+      toast.error('Please select or add at least one schedule slot');
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -64,6 +99,7 @@ export default function PostTuitionPage() {
           location: location.trim(),
           monthlyFee: Number(monthlyFee),
           daysPerWeek: Number(daysPerWeek),
+          scheduleSlots,
           bannerImage,
           description: description.trim(),
         }),
@@ -141,7 +177,9 @@ export default function PostTuitionPage() {
               <option value="O-Level / Class 9-10">O-Level / Class 9-10</option>
               <option value="A-Level">A-Level</option>
               <option value="Admission / HSC">Admission / HSC</option>
-              <option value="University / Job Seeker">University / Job Seeker</option>
+              <option value="University / Job Seeker">
+                University / Job Seeker
+              </option>
             </select>
           </div>
 
@@ -206,7 +244,73 @@ export default function PostTuitionPage() {
           </div>
         </div>
 
-        {/* Challenge 3: Direct Banner Upload via ImgBB */}
+        {/* Available Schedule Slots (Preset + Custom) */}
+        <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-900/50">
+          <label className="mb-2 block text-sm font-semibold text-[#041E42] dark:text-white">
+            Available Schedule Slots (Students will choose from these)
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {PRESET_SLOTS.map((slot) => {
+              const selected = scheduleSlots.includes(slot);
+              return (
+                <button
+                  key={slot}
+                  type="button"
+                  onClick={() => toggleSlot(slot)}
+                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                    selected
+                      ? 'bg-[#0077CC] text-white'
+                      : 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200'
+                  }`}
+                >
+                  {slot}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Custom Slot Input */}
+          <div className="mt-3 flex gap-2">
+            <input
+              type="text"
+              value={customSlot}
+              onChange={(e) => setCustomSlot(e.target.value)}
+              placeholder="Add custom slot (e.g. Sun-Tue 7:30 PM)"
+              className="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 outline-none focus:border-[#0077CC] dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+            />
+            <button
+              type="button"
+              onClick={addCustomSlot}
+              className="inline-flex items-center gap-1 rounded-lg bg-[#041E42] px-3.5 py-2 text-xs font-semibold text-white hover:bg-[#0a2d5e] dark:bg-[#0077CC]"
+            >
+              <Plus size={14} />
+              Add Slot
+            </button>
+          </div>
+
+          {/* Selected Slots Preview */}
+          {scheduleSlots.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {scheduleSlots.map((slot) => (
+                <span
+                  key={slot}
+                  className="inline-flex items-center gap-1 rounded-full bg-[#FF6B00]/15 px-2.5 py-1 text-xs font-semibold text-[#FF6B00]"
+                >
+                  {slot}
+                  <button
+                    type="button"
+                    onClick={() => toggleSlot(slot)}
+                    className="hover:text-rose-600"
+                  >
+                    <X size={12} />
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Direct Banner Upload via ImgBB */}
         <div>
           <label className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-200">
             Banner Image (ImgBB Direct Upload)
