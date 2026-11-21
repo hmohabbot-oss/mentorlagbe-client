@@ -7,6 +7,7 @@ import {
   BookOpenCheck,
   Clock,
   DollarSign,
+  Receipt,
   Loader2,
 } from 'lucide-react';
 import { apiFetch } from '@/lib/api';
@@ -118,15 +119,22 @@ export default function AdminOverviewPage() {
         <div className="flex flex-wrap gap-3">
           <Link
             href="/dashboard/admin/tuitions"
-            className="rounded-lg bg-[#FF6B00] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#e05e00]"
+            className="rounded-lg bg-[#FF6B00] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#e05e00]"
           >
             Review Tuitions
           </Link>
           <Link
             href="/dashboard/admin/users"
-            className="rounded-lg bg-[#041E42] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#0a2d5e] dark:bg-[#0077CC]"
+            className="rounded-lg bg-[#041E42] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#0a2d5e] dark:bg-[#0077CC]"
           >
             Manage Users
+          </Link>
+          <Link
+            href="/dashboard/admin/transactions"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700"
+          >
+            <Receipt size={16} />
+            Transactions
           </Link>
         </div>
       </div>
